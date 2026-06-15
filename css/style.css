@@ -1,0 +1,133 @@
+/* 1. Global Reset & Desktop Transparency */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important; /* Critical for Electron transparency */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #ffffff;
+    user-select: none;
+    -webkit-app-region: no-drag; /* Clicks drag handled natively or disabled */
+}
+
+/* 2. Visualizer Canvas Layout */
+#visualizer-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background: transparent;
+    pointer-events: none; /* Let mouse clicks pass through canvas */
+}
+
+/* 3. Onboarding Glassmorphism Overlay */
+#onboarding-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: transparent; /* Transparent background to let the glass-card shape stand out */
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 9999;
+}
+
+#onboarding-overlay.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Onboarding glass card container */
+.glass-card {
+    background: #000000;
+    border: 1px solid #ffffff;
+    border-radius: 12px;
+    padding: 24px 32px;
+    text-align: center;
+    max-width: 420px;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand-title {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #ffffff;
+}
+
+.brand-desc {
+    font-size: 14px;
+    color: #ffffff;
+    line-height: 1.4;
+}
+
+.sub-text {
+    font-size: 11px;
+    color: #888888;
+}
+
+.btn-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    width: 100%;
+    justify-content: center;
+}
+
+/* Premium onboarding button */
+.glow-btn {
+    background: #ffffff;
+    border: none;
+    border-radius: 8px;
+    color: #000000;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    outline: none;
+}
+
+.glow-btn:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+
+.glow-btn:active {
+    transform: translateY(1px);
+}
+
+/* Secondary/Quit button */
+.secondary-btn {
+    background: #000000;
+    border: 1px solid #ffffff;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    outline: none;
+}
+
+.secondary-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.secondary-btn:active {
+    transform: translateY(1px);
+}

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tinyparty</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <!-- The visualizer canvas -->
+    <canvas id="visualizer-canvas"></canvas>
+    
+    <!-- User Onboarding Overlay (requires user click to activate AudioContext & grant mic permission) -->
+    <div id="onboarding-overlay">
+        <div class="glass-card">
+            <h1 class="brand-title">tinyparty</h1>
+            <p class="brand-desc">a music viz behind your dock</p>
+            <div class="btn-group">
+                <button id="start-btn" class="glow-btn">start</button>
+                <button id="quit-btn" class="secondary-btn">quit</button>
+            </div>
+            <p class="sub-text">(requires microphone access to analyze system audio output)</p>
+        </div>
+    </div>
+
+    <script type="module" src="./js/app.js"></script>
+</body>
+</html>

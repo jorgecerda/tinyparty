@@ -1,0 +1,58 @@
+{
+  "name": "tinyparty",
+  "version": "0.1.0",
+  "description": "macOS Dock-integrated music visualizer",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "start": "electron .",
+    "electron-dev": "electron . --dev",
+    "build": "vite build",
+    "dist": "npm run build && electron-builder --mac"
+  },
+  "devDependencies": {
+    "electron": "^34.0.0",
+    "electron-builder": "^26.15.3",
+    "vite": "^6.0.0"
+  },
+  "build": {
+    "appId": "com.tinyparty.app",
+    "productName": "tinyparty",
+    "mac": {
+      "category": "public.app-category.music",
+      "target": [
+        "dmg"
+      ],
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "tinyparty needs microphone access to visualize sounds."
+      }
+    },
+    "win": {
+      "target": [
+        "portable",
+        "nsis"
+      ],
+      "icon": "build/icon.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Audio",
+      "icon": "build/icon.png"
+    },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "preload.js",
+      "trayTemplate.png",
+      "trayTemplate@2x.png",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    }
+  }
+}

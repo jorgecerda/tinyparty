@@ -1,0 +1,308 @@
+import { app, BrowserWindow, screen, ipcMain, systemPreferences, Tray, Menu, session } from 'electron';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+let mainWindow = null;
+let onboardingWindow = null;
+let tray = null;
+let currentStyle = 'glow';
+let currentPalette = 'neon';
+
+const isDev = process.argv.includes('--dev') || !app.isPackaged;
+
+function bindLogging(win, name) {
+  win.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    console.log(`[${name} Console] [Level ${level}] ${message} (at ${path.basename(sourceId)}:${line})`);
+  });
+}
+
+function setStyle(style) {
+  currentStyle = style;
+  if (mainWindow) {
+    mainWindow.webContents.send('change-style', style);
+  }
+}
+
+function setPalette(palette) {
+  currentPalette = palette;
+  if (mainWindow) {
+    mainWindow.webContents.send('change-palette', palette);
+  }
+}
+
+function createTray() {
+  // macOS uses template images for dark/light theme support.
+  // Windows/Linux need a standard colored icon (we fallback to the 2x template icon).
+  const iconName = process.platform === 'darwin' ? 'trayTemplate.png' : 'trayTemplate@2x.png';
+  const iconPath = path.join(__dirname, iconName);
+  tray = new Tray(iconPath);
+  
+  const contextMenu = Menu.buildFromTemplate([
+    { label: 'tinyparty', enabled: false },
+    { type: 'separator' },
+    {
+      label: 'style',
+      submenu: [
+        {
+          label: 'spectrum',
+          type: 'radio',
+          checked: currentStyle === 'glow',
+          click: () => { setStyle('glow'); }
+        },
+        {
+          label: 'retro',
+          type: 'radio',
+          checked: currentStyle === 'retro',
+          click: () => { setStyle('retro'); }
+        }
+      ]
+    },
+    {
+      label: 'color',
+      submenu: [
+        {
+          label: 'neon',
+          type: 'radio',
+          checked: currentPalette === 'neon',
+          click: () => { setPalette('neon'); }
+        },
+        {
+          label: 'cyberpunk',
+          type: 'radio',
+          checked: currentPalette === 'cyberpunk',
+          click: () => { setPalette('cyberpunk'); }
+        },
+        {
+          label: 'inferno',
+          type: 'radio',
+          checked: currentPalette === 'inferno',
+          click: () => { setPalette('inferno'); }
+        }
+      ]
+    },
+    { type: 'separator' },
+    { label: 'quit', click: () => { app.quit(); } }
+  ]);
+  
+  tray.setToolTip('tinyparty');
+  tray.setContextMenu(contextMenu);
+}
+
+function createOnboardingWindow() {
+  if (onboardingWindow) return;
+
+  onboardingWindow = new BrowserWindow({
+    width: 460,
+    height: 300,
+    frame: false,
+    transparent: true,
+    hasShadow: true,
+    resizable: false,
+    movable: true,
+    focusable: true,
+    alwaysOnTop: true,
+    center: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      backgroundThrottling: false
+    }
+  });
+
+  if (isDev) {
+    bindLogging(onboardingWindow, 'Onboarding');
+    onboardingWindow.webContents.openDevTools({ mode: 'detach' });
+    onboardingWindow.loadURL('http://localhost:5173');
+  } else {
+    bindLogging(onboardingWindow, 'Onboarding');
+    onboardingWindow.loadFile(path.join(__dirname, 'dist/index.html'));
+  }
+
+  onboardingWindow.on('closed', () => {
+    onboardingWindow = null;
+  });
+}
+
+function createVisualizerWindow() {
+  if (mainWindow) return;
+
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.bounds;
+  const { y: workAreaY, height: workAreaHeight } = primaryDisplay.workArea;
+  
+  const isMac = process.platform === 'darwin';
+  const dockHeight = 100; // max height of the visualizer area
+  const x = 0;
+  
+  // On Windows/Linux, position above the bottom taskbar if present, otherwise default to screen bottom
+  const targetY = isMac ? (height - dockHeight) : (workAreaY + workAreaHeight - dockHeight);
+
+  mainWindow = new BrowserWindow({
+    width: width,
+    height: dockHeight,
+    x: x,
+    y: targetY,
+    type: isMac ? 'desktop' : 'toolbar', // 'desktop' to sit behind macOS Dock; 'toolbar' or undefined on others
+    frame: false,
+    transparent: true,
+    hasShadow: false,
+    resizable: false,
+    movable: false,
+    focusable: false,
+    alwaysOnTop: false, // Devs porting to Windows/Linux may need to adjust this or use native parent window hooks
+    skipTaskbar: true,
+    show: false, // Prevent flash/jump by creating it hidden
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      autoplayPolicy: 'no-user-gesture-required', // bypass AudioContext user gesture requirement
+      backgroundThrottling: false
+    }
+  });
+
+  // Make sure it ignores mouse events immediately
+  mainWindow.setIgnoreMouseEvents(true, { forward: true });
+
+  mainWindow.once('ready-to-show', () => {
+    // Force the bounds post-creation to bypass OS workArea constraints
+    mainWindow.setBounds({ x: 0, y: targetY, width: width, height: dockHeight });
+    mainWindow.showInactive(); // Show without taking focus
+    mainWindow.webContents.send('change-style', currentStyle);
+    mainWindow.webContents.send('change-palette', currentPalette);
+  });
+
+  // Keep the window locked at the target position
+  const lockPosition = () => {
+    const bounds = mainWindow.getBounds();
+    if (bounds.y !== targetY || bounds.width !== width || bounds.height !== dockHeight || bounds.x !== 0) {
+      mainWindow.setBounds({ x: 0, y: targetY, width: width, height: dockHeight });
+    }
+  };
+
+  mainWindow.on('move', lockPosition);
+  mainWindow.on('resize', lockPosition);
+
+  if (isDev) {
+    bindLogging(mainWindow, 'Visualizer');
+    mainWindow.webContents.openDevTools({ mode: 'detach' });
+    mainWindow.loadURL('http://localhost:5173/#visualizer');
+  } else {
+    bindLogging(mainWindow, 'Visualizer');
+    mainWindow.loadFile(path.join(__dirname, 'dist/index.html'), { hash: 'visualizer' });
+  }
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+}
+
+app.whenReady().then(() => {
+  // Hide Dock icon on macOS
+  if (process.platform === 'darwin') {
+    app.dock.hide();
+  }
+
+  // Handle microphone permission requests from the renderer
+  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    if (permission === 'microphone' || permission === 'audio' || permission === 'media') {
+      callback(true);
+    } else {
+      callback(false);
+    }
+  });
+
+  // Handle permission checks from the renderer
+  session.defaultSession.setPermissionCheckHandler((webContents, permission, requestingOrigin, details) => {
+    if (permission === 'microphone' || permission === 'audio' || permission === 'media') {
+      return true;
+    }
+    return false;
+  });
+
+  createTray();
+
+  // Check microphone permissions
+  let hasMicPermission = false;
+  if (process.platform === 'darwin') {
+    const status = systemPreferences.getMediaAccessStatus('microphone');
+    hasMicPermission = (status === 'granted');
+  } else {
+    hasMicPermission = true;
+  }
+
+  if (hasMicPermission) {
+    createVisualizerWindow();
+  } else {
+    createOnboardingWindow();
+  }
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      if (hasMicPermission) {
+        createVisualizerWindow();
+      } else {
+        createOnboardingWindow();
+      }
+    }
+  });
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+// IPC Listener to toggle mouse event ignoring (allows click-through behavior)
+ipcMain.on('set-ignore-mouse', (event, ignore) => {
+  if (mainWindow) {
+    if (ignore) {
+      mainWindow.setIgnoreMouseEvents(true, { forward: true });
+    } else {
+      mainWindow.setIgnoreMouseEvents(false);
+    }
+  }
+});
+
+// Onboarding is completed successfully
+ipcMain.on('onboarding-complete', () => {
+  if (onboardingWindow) {
+    onboardingWindow.close();
+  }
+  createVisualizerWindow();
+});
+
+// Clean quit request from the UI/Esc key
+ipcMain.on('quit-app', () => {
+  app.quit();
+});
+
+// Sync visualizer state once renderer is fully loaded and ready to process messages
+ipcMain.on('visualizer-ready', () => {
+  if (mainWindow) {
+    mainWindow.webContents.send('change-style', currentStyle);
+    mainWindow.webContents.send('change-palette', currentPalette);
+  }
+});
+
+// IPC Handler to request native macOS microphone access
+ipcMain.handle('request-microphone-permission', async () => {
+  if (process.platform === 'darwin') {
+    try {
+      const status = systemPreferences.getMediaAccessStatus('microphone');
+      if (status === 'granted') {
+        return true;
+      }
+      return await systemPreferences.askForMediaAccess('microphone');
+    } catch (error) {
+      console.error('Failed to request native media access:', error);
+      return false;
+    }
+  }
+  return true;
+});
