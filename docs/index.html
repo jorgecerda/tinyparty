@@ -15,9 +15,7 @@
   <link rel="icon" type="image/png" href="icon.png">
 </head>
 <body>
-  <div class="glow-container">
-    <div class="glow-spot"></div>
-  </div>
+  <canvas id="bgVisualizer" class="bg-visualizer"></canvas>
 
   <main class="container">
     <!-- 1. Logo -->
@@ -115,6 +113,65 @@
         console.error('failed to copy text: ', err);
       }
     });
+
+    // Background Visualizer Animation
+    const canvas = document.getElementById('bgVisualizer');
+    const ctx = canvas.getContext('2d');
+    
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+    
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+    
+    const barCount = 48;
+    const bars = Array.from({ length: barCount }, () => ({
+      targetHeight: 0,
+      currentHeight: 0,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.025 + Math.random() * 0.035
+    }));
+    
+    const colors = ['#ff007f', '#9d00ff', '#00f0ff', '#7000ff'];
+    
+    function animateVisualizer() {
+      ctx.clearRect(0, 0, width, height);
+      
+      const barWidth = width / barCount;
+      
+      for (let i = 0; i < barCount; i++) {
+        const bar = bars[i];
+        bar.phase += bar.speed;
+        
+        const base = Math.sin(bar.phase) * 0.35 + 0.65;
+        const noise = Math.sin(bar.phase * 3.7 + i) * 0.12;
+        bar.targetHeight = (base + noise) * (height * 0.45);
+        
+        bar.currentHeight += (bar.targetHeight - bar.currentHeight) * 0.18;
+        
+        const x = i * barWidth;
+        const y = height - bar.currentHeight;
+        const w = Math.max(1, barWidth - 4);
+        const h = bar.currentHeight;
+        
+        if (h > 0) {
+          const grad = ctx.createLinearGradient(x, y, x, height);
+          const color1 = colors[i % colors.length];
+          grad.addColorStop(0, color1);
+          grad.addColorStop(0.5, colors[(i + 2) % colors.length]);
+          grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          
+          ctx.fillStyle = grad;
+          ctx.fillRect(x, y, w, h);
+        }
+      }
+      
+      requestAnimationFrame(animateVisualizer);
+    }
+    animateVisualizer();
   </script>
+
 </body>
 </html>
