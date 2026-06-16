@@ -9,7 +9,7 @@
   <!-- Google Fonts: Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="style.css">
   <link rel="icon" type="image/png" href="icon.png">
@@ -31,8 +31,18 @@
 
     <!-- 3. Buttons -->
     <div class="actions">
-      <a href="https://github.com/jorgecerda/tinyparty/releases/download/v0.1.0/tinyparty-0.1.0.dmg" class="btn btn-primary" id="downloadBtn">download</a>
-      <a href="https://github.com/jorgecerda/tinyparty" class="btn btn-secondary" id="githubLink">view on github</a>
+      <a href="https://github.com/jorgecerda/tinyparty/releases/download/v0.1.0/tinyparty-0.1.0.dmg" class="btn btn-primary" id="downloadBtn">
+        <svg class="btn-icon" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
+          <path d="M11.182.008C11.148-.03 9.923.023 8.857 1.18c-1.066 1.156-.902 2.482-.878 2.516s1.52.087 2.475-1.258.762-2.391.728-2.43m3.314 11.733c-.048-.096-2.325-1.234-2.113-3.422s1.675-2.789 1.698-2.854-.597-.79-1.254-1.157a3.7 3.7 0 0 0-1.563-.434c-.108-.003-.483-.095-1.254.116-.508.139-1.653.589-1.968.607-.316.018-1.256-.522-2.267-.665-.647-.125-1.333.131-1.824.328-.49.196-1.422.754-2.074 2.237-.652 1.482-.311 3.83-.067 4.56s.625 1.924 1.273 2.796c.576.984 1.34 1.667 1.659 1.899s1.219.386 1.843.067c.502-.308 1.408-.485 1.766-.472.357.013 1.061.154 1.782.539.571.197 1.111.115 1.652-.105.541-.221 1.324-1.059 2.238-2.758q.52-1.185.473-1.282"/>
+        </svg>
+        <span>download for mac</span>
+      </a>
+      <a href="https://github.com/jorgecerda/tinyparty" class="btn btn-secondary" id="githubLink">
+        <svg class="btn-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+          <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.579.688.481C19.138 20.161 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+        </svg>
+        <span>view on github</span>
+      </a>
     </div>
 
     <!-- 4. Laptop Demo -->
@@ -134,8 +144,6 @@
       speed: 0.025 + Math.random() * 0.035
     }));
     
-    const colors = ['#ff007f', '#9d00ff', '#00f0ff', '#7000ff'];
-    
     function animateVisualizer() {
       ctx.clearRect(0, 0, width, height);
       
@@ -147,7 +155,7 @@
         
         const base = Math.sin(bar.phase) * 0.35 + 0.65;
         const noise = Math.sin(bar.phase * 3.7 + i) * 0.12;
-        bar.targetHeight = (base + noise) * (height * 0.45);
+        bar.targetHeight = (base + noise) * (height * 0.75);
         
         bar.currentHeight += (bar.targetHeight - bar.currentHeight) * 0.18;
         
@@ -157,11 +165,12 @@
         const h = bar.currentHeight;
         
         if (h > 0) {
+          const hue = 320 - (i / barCount) * 140; // Cyberpunk: Hot Pink (320) to Cyan (180)
+          const color = `hsl(${hue}, 100%, 50%)`;
+          
           const grad = ctx.createLinearGradient(x, y, x, height);
-          const color1 = colors[i % colors.length];
-          grad.addColorStop(0, color1);
-          grad.addColorStop(0.5, colors[(i + 2) % colors.length]);
-          grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+          grad.addColorStop(1, color);
           
           ctx.fillStyle = grad;
           ctx.fillRect(x, y, w, h);
