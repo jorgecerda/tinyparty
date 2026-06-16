@@ -1,5 +1,7 @@
 # tinyparty
 
+https://tp.crda.dev/
+
 a lightweight macos dock-integrated music visualizer. it runs on a transparent layer behind the macos dock, rendering audio-reactive equalizer bars.
 
 ![tinyparty demo](docs/assets/demo.gif)
