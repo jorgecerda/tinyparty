@@ -66,13 +66,16 @@ npm run build
 npx electron-builder --mac dir
 ./sign.sh
 ditto -c -k --sequesterRsrc --keepParent release/mac/tinyparty.app release/tinyparty-mac.zip
-npx electron-builder --mac dmg --prepackaged release/mac
+npx electron-builder --mac dmg --prepackaged release/mac/tinyparty.app
+codesign --force --sign - release/tinyparty-0.1.0.dmg
 ```
 
 ## installation
-1.  unzip `tinyparty-mac.zip` and move `tinyparty.app` to `/Applications`.
-2.  run the following in terminal to clear gatekeeper quarantine:
-    ```bash
-    xattr -cr /Applications/tinyparty.app
-    ```
-3.  open the app, click **start**, grant microphone permission when prompted, and restart the app.
+1. open the .dmg and drag `tinyparty.app` to your `/Applications` folder (or unzip `tinyparty-mac.zip` and move the app there).
+2. open your terminal app (search for "terminal" in spotlight).
+3. paste the following command and press enter:
+   ```bash
+   xattr -cr /Applications/tinyparty.app
+   ```
+4. open the app
+

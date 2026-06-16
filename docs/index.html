@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>tinyparty</title>
+  <meta name="description" content="macos audio-reactive music visualizer. a minimalist, dock-integrated audio visualizer for your mac.">
+  
+  <!-- Google Fonts: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="icon.png">
+</head>
+<body>
+  <div class="glow-container">
+    <div class="glow-spot"></div>
+  </div>
+
+  <main class="container">
+    <!-- 1. Logo -->
+    <div class="logo-wrapper">
+      <img src="icon.png" alt="tinyparty logo" class="app-logo" id="appLogo">
+    </div>
+
+    <!-- 2. Tagline (including App Title) -->
+    <div class="brand-section">
+      <h1 class="app-title">tinyparty</h1>
+      <p class="app-tagline">macos audio-reactive music visualizer</p>
+    </div>
+
+    <!-- 3. Buttons -->
+    <div class="actions">
+      <a href="https://github.com/jorgecerda/tinyparty/releases/download/v0.1.0/tinyparty-0.1.0.dmg" class="btn btn-primary" id="downloadBtn">download</a>
+      <a href="https://github.com/jorgecerda/tinyparty" class="btn btn-secondary" id="githubLink">view on github</a>
+    </div>
+
+    <!-- 4. Laptop Demo -->
+    <section class="demo-section" aria-label="app demo">
+      <div class="macbook-container">
+        <div class="macbook-screen">
+          <div class="macbook-display">
+            <img src="assets/demo.gif" alt="tinyparty app visualization demo" class="demo-gif" id="demoGif">
+            <div class="macbook-reflection"></div>
+          </div>
+        </div>
+        <div class="macbook-base"></div>
+      </div>
+    </section>
+
+    <!-- 5. Installation Steps -->
+    <section class="install-section" aria-label="installation guide">
+      <details class="install-details" id="installDetails">
+        <summary class="install-summary" id="installSummary">
+          <span class="summary-text">how to install?</span>
+          <svg class="chevron-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </summary>
+        
+        <div class="install-content">
+          <ol class="steps-list">
+            <li class="step-item">
+              <p class="step-text">open the .dmg and drag <span class="highlight">tinyparty.app</span> to your <span class="highlight">/Applications</span> folder (or unzip <span class="highlight">tinyparty-mac.zip</span> and move the app there).</p>
+            </li>
+            
+            <li class="step-item">
+              <p class="step-text">open your terminal app (search for "terminal" in spotlight).</p>
+            </li>
+            
+            <li class="step-item">
+              <div class="step-flex">
+                <p class="step-text">paste the following command and press enter:</p>
+                <div class="code-block-wrapper">
+                  <code id="terminalCommand">xattr -cr /Applications/tinyparty.app</code>
+                  <button class="copy-btn" id="copyBtn" aria-label="copy command">
+                    <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span class="copy-text">copy</span>
+                  </button>
+                </div>
+              </div>
+            </li>
+            
+            <li class="step-item">
+              <p class="step-text">open the app</p>
+            </li>
+          </ol>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <script>
+    const copyBtn = document.getElementById('copyBtn');
+    const commandText = document.getElementById('terminalCommand').innerText;
+    
+    copyBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      try {
+        await navigator.clipboard.writeText(commandText);
+        const copyTextSpan = copyBtn.querySelector('.copy-text');
+        copyTextSpan.textContent = 'copied!';
+        copyBtn.classList.add('copied');
+        
+        setTimeout(() => {
+          copyTextSpan.textContent = 'copy';
+          copyBtn.classList.remove('copied');
+        }, 2000);
+      } catch (err) {
+        console.error('failed to copy text: ', err);
+      }
+    });
+  </script>
+</body>
+</html>
