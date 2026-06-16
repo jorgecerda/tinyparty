@@ -36,7 +36,7 @@ body {
   left: 0;
   width: 100vw;
   height: 50vh;
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
   filter: blur(48px) opacity(0.35);
 }
@@ -48,6 +48,8 @@ h1, h2, h3, p, a, span, button, code, summary, li {
 
 /* Container (Fixed Block Width) */
 .container {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 340px; /* Fixed block column width */
   margin: 0 auto;
