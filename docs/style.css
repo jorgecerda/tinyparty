@@ -32,10 +32,10 @@ body {
 /* Background Visualizer Canvas */
 .bg-visualizer {
   position: fixed;
-  bottom: 0;
+  bottom: -50px;
   left: 0;
   width: 100vw;
-  height: 50vh;
+  height: calc(50vh + 50px);
   z-index: 0;
   pointer-events: none;
   filter: blur(48px) opacity(0.35);
@@ -438,7 +438,7 @@ h1, h2, h3, p, a, span, button, code, summary, li {
     font-size: 0.9rem;
   }
   .bg-visualizer {
-    height: 55vh;
+    height: calc(55vh + 50px);
     filter: blur(36px) opacity(0.55);
   }
 }
