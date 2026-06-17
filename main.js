@@ -59,6 +59,12 @@ function createTray() {
           click: () => { setStyle('glow'); }
         },
         {
+          label: 'mesh',
+          type: 'radio',
+          checked: currentStyle === 'mesh',
+          click: () => { setStyle('mesh'); }
+        },
+        {
           label: 'retro',
           type: 'radio',
           checked: currentStyle === 'retro',

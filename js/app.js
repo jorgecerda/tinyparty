@@ -13,6 +13,16 @@ const analyser = new AudioAnalyser(FFT_SIZE);
 let currentStyle = 'spectrum';
 let currentPalette = 'neon';
 
+// Static 2-Layer 2D Mesh Configuration and State
+const meshCols = 90;
+const meshLayers = [
+    { baseYOffset: 0, maxPeakHeight: 55, opacity: 0.45, smoothing: 0.30, freqScale: 0.65 }, // back layer (offset bottom)
+    { baseYOffset: 0, maxPeakHeight: 80, opacity: 0.85, smoothing: 0.60, freqScale: 0.85 }  // front layer (offset bottom)
+];
+// 2D array [2][meshCols] to track current smoothed column heights for each layer
+const meshHeights = Array.from({ length: 2 }, () => new Array(meshCols).fill(0));
+
+
 // Set initial class on startup
 if (currentStyle === 'glow') {
     canvas.classList.add('glow');
@@ -174,6 +184,86 @@ function drawRetroBars(frequencies, width, height) {
     }
 }
 
+// Draw a single triangulated mountain range layer
+function drawLayer(layer, heightsForLayer, width, height) {
+    const colSpacing = width / (meshCols - 1);
+    
+    // Generate vertices for this layer
+    const vertices = [];
+    for (let c = 0; c < meshCols; c++) {
+        const x = c * colSpacing;
+        const vertexHeight = heightsForLayer[c];
+        
+        const baselineY = height - layer.baseYOffset;
+        const peakY = baselineY - vertexHeight;
+        const midY = baselineY - vertexHeight * 0.45;
+        
+        // Define peak, mid, and base points starting from the bottom of the screen
+        vertices.push({
+            p0: { x, y: peakY },         // peak (top node)
+            p1: { x, y: midY },          // mid node
+            p2: { x, y: baselineY }      // baseline node
+        });
+    }
+    
+    // Connect vertices to draw filled & stroked triangles
+    for (let c = 0; c < meshCols - 1; c++) {
+        const v1 = vertices[c];
+        const v2 = vertices[c + 1];
+        
+        // Average column ratio for color calculation
+        const indexRatio = (c + 0.5) / (meshCols - 1);
+        const avgHeight = (heightsForLayer[c] + heightsForLayer[c + 1]) / 2;
+        const intensity = Math.min(1.0, avgHeight / layer.maxPeakHeight);
+        
+        // Base color with layer opacity
+        const baseColor = getBarColor(indexRatio, intensity);
+        // Replace HSL with HSLA for transparency
+        const hslaColor = baseColor.replace('hsl', 'hsla').replace(')', `, ${layer.opacity})`);
+        
+        ctx.strokeStyle = hslaColor;
+        ctx.lineWidth = 1.2;
+        
+        // Top cell triangles
+        drawTriangle(v1.p0, v2.p0, v2.p1);
+        drawTriangle(v1.p0, v1.p1, v2.p1);
+        
+        // Bottom cell triangles
+        drawTriangle(v1.p1, v2.p1, v2.p2);
+        drawTriangle(v1.p1, v1.p2, v2.p2);
+    }
+}
+
+// Draw a single filled triangle with stroke outline
+function drawTriangle(a, b, c) {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; // Semi-opaque dark mask to hide background layers
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.lineTo(c.x, c.y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+}
+
+// Draw the 2D wireframe mesh
+function drawMesh(width, height) {
+    ctx.clearRect(0, 0, width, height);
+    
+    // Draw layers from back to front
+    for (let i = 0; i < meshLayers.length; i++) {
+        // Calculate display heights with horizontal 3-point smoothing
+        const displayHeights = new Array(meshCols);
+        for (let c = 0; c < meshCols; c++) {
+            const prev = c > 0 ? meshHeights[i][c - 1] : meshHeights[i][c];
+            const curr = meshHeights[i][c];
+            const next = c < meshCols - 1 ? meshHeights[i][c + 1] : meshHeights[i][c];
+            displayHeights[c] = prev * 0.25 + curr * 0.5 + next * 0.25;
+        }
+        drawLayer(meshLayers[i], displayHeights, width, height);
+    }
+}
+
 // 60FPS animation rendering loop
 function draw() {
     requestAnimationFrame(draw);
@@ -186,6 +276,33 @@ function draw() {
 
     if (currentStyle === 'spectrum' || currentStyle === 'glow') {
         drawGlowBars(frequencies, logicalWidth, logicalHeight);
+    } else if (currentStyle === 'mesh') {
+        // Update column heights for each layer independently using their respective smoothing and freqScale
+        for (let i = 0; i < meshLayers.length; i++) {
+            const layer = meshLayers[i];
+            const maxIdx = (frequencies.length - 1) * layer.freqScale;
+            for (let c = 0; c < meshCols; c++) {
+                const indexRatio = c / (meshCols - 1);
+                
+                // Linearly interpolate between adjacent frequency bins for ultra-smooth wave movement
+                const floatIndex = indexRatio * maxIdx;
+                const indexLower = Math.floor(floatIndex);
+                const indexUpper = Math.min(frequencies.length - 1, indexLower + 1);
+                const weight = floatIndex - indexLower;
+                
+                const amplitude = (frequencies[indexLower] || 0) * (1 - weight) + 
+                                  (frequencies[indexUpper] || 0) * weight;
+                                  
+                // Boost signal sensitivity by 45% for increased vertical range
+                const intensity = Math.min(1.0, (amplitude / 255) * 1.45);
+                const targetVal = intensity * layer.maxPeakHeight;
+                
+                // Smooth interpolation
+                meshHeights[i][c] += (targetVal - meshHeights[i][c]) * layer.smoothing;
+            }
+        }
+
+        drawMesh(logicalWidth, logicalHeight);
     } else if (currentStyle === 'retro') {
         drawRetroBars(frequencies, logicalWidth, logicalHeight);
     }
