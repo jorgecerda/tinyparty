@@ -10,8 +10,13 @@ const QUIT_BTN = document.getElementById('quit-btn');
 const FFT_SIZE = 256;  // Fast Fourier Transform sample size (yields 128 bins)
 const analyser = new AudioAnalyser(FFT_SIZE);
 
-let currentStyle = 'glow';
+let currentStyle = 'spectrum';
 let currentPalette = 'neon';
+
+// Set initial class on startup
+if (currentStyle === 'glow') {
+    canvas.classList.add('glow');
+}
 
 const peakHeights = new Array(90).fill(0);
 const peakHoldFrames = new Array(90).fill(0);
@@ -54,7 +59,7 @@ function drawGlowBars(frequencies, width, height) {
     const barCount = 90;
     const spacing = 3;
     const barWidth = (width - (spacing * (barCount - 1))) / barCount;
-    const maxBarHeight = height - 10;
+    const maxBarHeight = 90; // Lock height to 90px to match original size
 
     for (let i = 0; i < barCount; i++) {
         const indexRatio = i / barCount;
@@ -91,7 +96,7 @@ function drawRetroBars(frequencies, width, height) {
     const barCount = 90;
     const spacing = 3;
     const barWidth = (width - (spacing * (barCount - 1))) / barCount;
-    const maxBarHeight = height - 15;
+    const maxBarHeight = 85; // Lock height to 85px to match original size
 
     for (let i = 0; i < barCount; i++) {
         const indexRatio = i / barCount;
@@ -179,7 +184,7 @@ function draw() {
     const logicalHeight = canvas.clientHeight;
     const frequencies = analyser.getFrequencies();
 
-    if (currentStyle === 'glow') {
+    if (currentStyle === 'spectrum' || currentStyle === 'glow') {
         drawGlowBars(frequencies, logicalWidth, logicalHeight);
     } else if (currentStyle === 'retro') {
         drawRetroBars(frequencies, logicalWidth, logicalHeight);
@@ -190,6 +195,12 @@ function draw() {
 if (window.electronAPI && typeof window.electronAPI.onStyleChange === 'function') {
     window.electronAPI.onStyleChange((style) => {
         currentStyle = style;
+        
+        // Update canvas classes
+        canvas.className = '';
+        if (style === 'glow') {
+            canvas.classList.add('glow');
+        }
     });
 }
 

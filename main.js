@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 let mainWindow = null;
 let onboardingWindow = null;
 let tray = null;
-let currentStyle = 'glow';
+let currentStyle = 'spectrum';
 let currentPalette = 'neon';
 
 const isDev = process.argv.includes('--dev') || !app.isPackaged;
@@ -48,6 +48,12 @@ function createTray() {
       submenu: [
         {
           label: 'spectrum',
+          type: 'radio',
+          checked: currentStyle === 'spectrum',
+          click: () => { setStyle('spectrum'); }
+        },
+        {
+          label: 'glow',
           type: 'radio',
           checked: currentStyle === 'glow',
           click: () => { setStyle('glow'); }
@@ -135,7 +141,7 @@ function createVisualizerWindow() {
   const { y: workAreaY, height: workAreaHeight } = primaryDisplay.workArea;
   
   const isMac = process.platform === 'darwin';
-  const dockHeight = 100; // max height of the visualizer area
+  const dockHeight = 160; // max height of the visualizer area (includes headroom for glow blur)
   const x = 0;
   
   // On Windows/Linux, position above the bottom taskbar if present, otherwise default to screen bottom
