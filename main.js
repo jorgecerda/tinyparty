@@ -1,15 +1,23 @@
-import { app, BrowserWindow, screen, ipcMain, systemPreferences, Tray, Menu, session } from 'electron';
+import { app, BrowserWindow, screen, ipcMain, systemPreferences, Tray, Menu, session, shell } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const pkgPath = path.join(__dirname, 'package.json');
+const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+const version = pkg.version;
 
 let mainWindow = null;
 let onboardingWindow = null;
 let tray = null;
 let currentStyle = 'spectrum';
 let currentPalette = 'neon';
+let hasUpdateAvailable = false;
+
 
 const isDev = process.argv.includes('--dev') || !app.isPackaged;
 
@@ -24,6 +32,7 @@ function setStyle(style) {
   if (mainWindow) {
     mainWindow.webContents.send('change-style', style);
   }
+  updateTrayMenu();
 }
 
 function setPalette(palette) {
@@ -31,17 +40,15 @@ function setPalette(palette) {
   if (mainWindow) {
     mainWindow.webContents.send('change-palette', palette);
   }
+  updateTrayMenu();
 }
 
-function createTray() {
-  // macOS uses template images for dark/light theme support.
-  // Windows/Linux need a standard colored icon (we fallback to the 2x template icon).
-  const iconName = process.platform === 'darwin' ? 'trayTemplate.png' : 'trayTemplate@2x.png';
-  const iconPath = path.join(__dirname, iconName);
-  tray = new Tray(iconPath);
-  
-  const contextMenu = Menu.buildFromTemplate([
-    { label: 'tinyparty', enabled: false },
+
+function updateTrayMenu() {
+  if (!tray) return;
+
+  const menuTemplate = [
+    { label: `tinyparty ${version}`, enabled: false },
     { type: 'separator' },
     {
       label: 'style',
@@ -97,11 +104,63 @@ function createTray() {
     },
     { type: 'separator' },
     { label: 'quit', click: () => { app.quit(); } }
-  ]);
-  
-  tray.setToolTip('tinyparty');
+  ];
+
+  if (hasUpdateAvailable) {
+    menuTemplate.push({ type: 'separator' });
+    menuTemplate.push({
+      label: 'update available...',
+      click: () => {
+        shell.openExternal('https://tp.crda.dev');
+      }
+    });
+  }
+
+  const contextMenu = Menu.buildFromTemplate(menuTemplate);
   tray.setContextMenu(contextMenu);
 }
+
+function createTray() {
+  // macOS uses template images for dark/light theme support.
+  // Windows/Linux need a standard colored icon (we fallback to the 2x template icon).
+  const iconName = process.platform === 'darwin' ? 'trayTemplate.png' : 'trayTemplate@2x.png';
+  const iconPath = path.join(__dirname, iconName);
+  tray = new Tray(iconPath);
+  tray.setToolTip('tinyparty');
+  updateTrayMenu();
+}
+
+function isNewerVersion(latest, current) {
+  const latestParts = latest.split('.').map(Number);
+  const currentParts = current.split('.').map(Number);
+  for (let i = 0; i < Math.max(latestParts.length, currentParts.length); i++) {
+    const l = latestParts[i] || 0;
+    const c = currentParts[i] || 0;
+    if (l > c) return true;
+    if (l < c) return false;
+  }
+  return false;
+}
+
+async function checkUpdates() {
+  try {
+    const response = await fetch('https://api.github.com/repos/jorgecerda/tinyparty/releases/latest', {
+      headers: {
+        'User-Agent': 'tinyparty'
+      }
+    });
+    if (!response.ok) return;
+    const data = await response.json();
+    const latestVersion = data.tag_name.replace(/^v/, '');
+    if (isNewerVersion(latestVersion, version)) {
+      hasUpdateAvailable = true;
+      updateTrayMenu();
+    }
+  } catch (err) {
+    console.error('Failed to check updates:', err);
+  }
+}
+
 
 function createOnboardingWindow() {
   if (onboardingWindow) return;
@@ -237,6 +296,7 @@ app.whenReady().then(() => {
   });
 
   createTray();
+  checkUpdates();
 
   // Check microphone permissions
   let hasMicPermission = false;
