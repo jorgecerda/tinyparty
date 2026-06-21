@@ -9,16 +9,17 @@ a lightweight macos dock-integrated music visualizer. it runs on a transparent l
 ## features
 *   **dock layer**: sits between the desktop wallpaper and the macos dock.
 *   **click-through**: ignores mouse clicks so you can use the dock and desktop normally.
-*   **styles**: supports different visualizer styles (`glow`, `retro`) and color palettes (`neon`, `cyberpunk`, `inferno`) configured from the system tray menu.
+*   **styles**: supports different visualizer styles (`spectrum`, `glow`, `mesh`, `retro`) and color palettes (`neon`, `cyberpunk`, `inferno`) configured from the system tray menu.
 *   **cross-platform prep**: configuration targets in `package.json` and platform-specific checks in `main.js` (for taskbar-aware bounds and tray icons) are structured to support developer ports to other operating systems.
 
 ### visual styles
 
-| Spectrum (Glow) | Retro (VFD) |
-| :---: | :---: |
-| ![Spectrum Neon](docs/assets/1-spectrum-neon.png)<br>**Neon** | ![Retro Neon](docs/assets/4-retro-neon.png)<br>**Neon** |
-| ![Spectrum Cyberpunk](docs/assets/2-spectrum-cyberpunk.png)<br>**Cyberpunk** | ![Retro Cyberpunk](docs/assets/5-retro-cyberpunk.png)<br>**Cyberpunk** |
-| ![Spectrum Inferno](docs/assets/3-spectrum-inferno.png)<br>**Inferno** | ![Retro Inferno](docs/assets/6-retro-inferno.png)<br>**Inferno** |
+| style | neon | cyberpunk | inferno |
+| :---: | :---: | :---: | :---: |
+| **spectrum** | <img src="docs/assets/01-tinyparty-spectrum-neon.png" width="260" alt="spectrum neon"> | <img src="docs/assets/02-tinyparty-spectrum-cyberpunk.png" width="260" alt="spectrum cyberpunk"> | <img src="docs/assets/03-tinyparty-spectrum-inferno.png" width="260" alt="spectrum inferno"> |
+| **glow** | <img src="docs/assets/04-tinyparty-glow-neon.png" width="260" alt="glow neon"> | <img src="docs/assets/05-tinyparty-glow-cyberpunk.png" width="260" alt="glow cyberpunk"> | <img src="docs/assets/06-tinyparty-glow-inferno.png" width="260" alt="glow inferno"> |
+| **mesh** | <img src="docs/assets/07-tinyparty-mesh-neon.png" width="260" alt="mesh neon"> | <img src="docs/assets/08-tinyparty-mesh-cyberpunk.png" width="260" alt="mesh cyberpunk"> | <img src="docs/assets/09-tinyparty-mesh-inferno.png" width="260" alt="mesh inferno"> |
+| **retro** | <img src="docs/assets/10-tinyparty-retro-neon.png" width="260" alt="retro neon"> | <img src="docs/assets/11-tinyparty-retro-cyberpunk-2.png" width="260" alt="retro cyberpunk"> | <img src="docs/assets/12-tinyparty-retro-inferno-2.png" width="260" alt="retro inferno"> |
 
 ## tech stack
 *   **runtime**: electron (`^34.0.0`)
