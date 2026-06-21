@@ -1,6 +1,6 @@
 {
   "name": "tinyparty",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "macOS Dock-integrated music visualizer",
   "main": "main.js",
   "type": "module",

@@ -81,3 +81,17 @@ codesign --force --sign - release/tinyparty-0.1.0.dmg
    ```
 4. open the app
 
+## changelog
+
+### [0.2.0] - 2026-06-20
+*   **style updates**: added a static, high-reactivity 2-layer 2d `mesh` visualizer.
+*   **performance**: optimized visualizer transitions with custom easing and locked visualizer window heights to prevent clipping.
+*   **tray menu updates**: appended the local application version dynamically to the tray menu title (e.g., `tinyparty 0.2.0`).
+*   **update checking**: integrated a background auto-update checker using the github releases api that alerts the user with an `update available...` option linking to `https://tp.crda.dev`.
+
+### [0.1.0] - 2026-06-15
+*   **initial release**: lightweight dock-integrated audio-reactive music visualizer.
+*   **themes & colors**: support for 3 main themes (`spectrum`, `glow`, `retro`) and 3 color palettes (`neon`, `cyberpunk`, `inferno`).
+*   **macos setup**: native microphone permissions setup and prepackaged signed `.dmg` release with gatekeeper bypass instructions.
+*   **landing page**: minimalist dark-themed home page at `https://tp.crda.dev`.
+
