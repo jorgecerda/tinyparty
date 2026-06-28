@@ -1,6 +1,6 @@
 {
   "name": "tinyparty",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "macOS Dock-integrated music visualizer",
   "main": "main.js",
   "type": "module",
@@ -25,7 +25,8 @@
         "dmg"
       ],
       "extendInfo": {
-        "NSMicrophoneUsageDescription": "tinyparty needs microphone access to visualize sounds."
+        "NSMicrophoneUsageDescription": "tinyparty needs microphone access to visualize sounds.",
+        "NSAudioCaptureUsageDescription": "tinyparty needs audio capture access to visualize sounds."
       }
     },
     "win": {

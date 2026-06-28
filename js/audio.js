@@ -8,22 +8,38 @@ export class AudioAnalyser {
         this.isInitialized = false;
     }
 
-    async init() {
+    async init(deviceId = null) {
         if (this.isInitialized) return true;
 
         console.log('secure context:', window.isSecureContext);
         console.log('navigator.mediaDevices:', !!navigator.mediaDevices);
 
+        const constraints = {
+            audio: {
+                echoCancellation: false,
+                noiseSuppression: false,
+                autoGainControl: false
+            },
+            video: false
+        };
+
+        if (deviceId) {
+            constraints.audio.deviceId = { exact: deviceId };
+        }
+
         try {
-            // Request standard microphone input natively
-            this.stream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    echoCancellation: false,
-                    noiseSuppression: false,
-                    autoGainControl: false
-                },
-                video: false
-            });
+            try {
+                this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+            } catch (error) {
+                if (deviceId) {
+                    console.warn(`Failed to initialize with deviceId ${deviceId}, falling back to default device:`, error);
+                    delete constraints.audio.deviceId;
+                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    localStorage.removeItem('selected-audio-device');
+                } else {
+                    throw error;
+                }
+            }
             
             const audioTracks = this.stream.getAudioTracks();
             console.log('Microphone audio tracks:', audioTracks.map(t => `${t.label} (readyState=${t.readyState}, enabled=${t.enabled})`));

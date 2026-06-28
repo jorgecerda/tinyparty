@@ -328,6 +328,44 @@ if (window.electronAPI && typeof window.electronAPI.onPaletteChange === 'functio
     });
 }
 
+async function updateAudioDevices() {
+    if (!window.electronAPI || !analyser.isInitialized) return;
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const inputs = devices
+            .filter(d => d.kind === 'audioinput')
+            .map(d => ({
+                id: d.deviceId,
+                label: d.label || 'unknown audio input'
+            }));
+        console.log('Detected audio inputs:', JSON.stringify(inputs));
+        const activeId = localStorage.getItem('selected-audio-device') || 'default';
+        window.electronAPI.sendAudioDevices(inputs, activeId);
+    } catch (err) {
+        console.error('Error enumerating devices:', err);
+    }
+}
+
+// Listen to system device changes (e.g. plugging/unplugging headphones)
+if (navigator.mediaDevices && typeof navigator.mediaDevices.addEventListener === 'function') {
+    navigator.mediaDevices.addEventListener('devicechange', updateAudioDevices);
+}
+
+// Listen for audio device changes from the main process
+if (window.electronAPI && typeof window.electronAPI.onChangeAudioDevice === 'function') {
+    window.electronAPI.onChangeAudioDevice(async (deviceId) => {
+        localStorage.setItem('selected-audio-device', deviceId);
+        try {
+            analyser.close();
+            const targetId = (deviceId === 'default' || !deviceId) ? null : deviceId;
+            await analyser.init(targetId);
+            updateAudioDevices();
+        } catch (error) {
+            console.error('Failed to switch audio device:', error);
+        }
+    });
+}
+
 // Request permissions, clear overlay, and trigger pass-through mode
 async function startVisualizer() {
     START_BTN.textContent = 'connecting...';
@@ -342,7 +380,9 @@ async function startVisualizer() {
             }
         }
 
-        await analyser.init();
+        const deviceId = localStorage.getItem('selected-audio-device');
+        await analyser.init(deviceId);
+        updateAudioDevices();
         
         // Tell Electron onboarding is complete
         if (window.electronAPI && typeof window.electronAPI.onboardingComplete === 'function') {
@@ -361,8 +401,10 @@ const isVisualizerOnly = window.location.hash === '#visualizer';
 
 if (isVisualizerOnly) {
     OVERLAY.style.display = 'none';
-    analyser.init().then(() => {
+    const deviceId = localStorage.getItem('selected-audio-device');
+    analyser.init(deviceId).then(() => {
         draw();
+        updateAudioDevices();
     }).catch(error => {
         console.error('Failed to auto-start visualizer:', error);
     });

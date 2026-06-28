@@ -9,6 +9,7 @@ a lightweight macos dock-integrated music visualizer. it runs on a transparent l
 ## features
 *   **dock layer**: sits between the desktop wallpaper and the macos dock.
 *   **click-through**: ignores mouse clicks so you can use the dock and desktop normally.
+*   **audio input selector**: select dynamically between hardware microphones and virtual loopback audio devices (like BlackHole) directly from the system tray menu.
 *   **styles**: supports different visualizer styles (`spectrum`, `glow`, `mesh`, `retro`) and color palettes (`neon`, `cyberpunk`, `inferno`) configured from the system tray menu.
 *   **cross-platform prep**: configuration targets in `package.json` and platform-specific checks in `main.js` (for taskbar-aware bounds and tray icons) are structured to support developer ports to other operating systems.
 
@@ -70,19 +71,42 @@ npx electron-builder --mac dir
 ./sign.sh
 ditto -c -k --sequesterRsrc --keepParent release/mac/tinyparty.app release/tinyparty-mac.zip
 npx electron-builder --mac dmg --prepackaged release/mac/tinyparty.app
-codesign --force --sign - release/tinyparty-0.1.0.dmg
+codesign --force --sign - release/tinyparty-{version}.dmg
 ```
 
 ## installation
-1. open the .dmg and drag `tinyparty.app` to your `/Applications` folder (or unzip `tinyparty-mac.zip` and move the app there).
-2. open your terminal app (search for "terminal" in spotlight).
+
+### 1. standard installation
+1. open the `.dmg` and drag **`tinyparty.app`** to your **`/Applications`** folder (or unzip `tinyparty-mac.zip` and move the app there).
+2. open your **terminal** app (search for "terminal" in spotlight).
 3. paste the following command and press enter:
    ```bash
    xattr -cr /Applications/tinyparty.app
    ```
-4. open the app
+   *(this clears the macOS gatekeeper quarantine flag for self-signed apps).*
+4. open the app, click **start**, and grant **microphone access** when prompted.
+
+### 2. system audio/headphones loopback setup (optional)
+to capture and visualize system audio playing from spotify, browser, or other apps directly to your headphones without microphone room noise:
+1. install **blackhole 2ch**:
+   ```bash
+   brew install blackhole-2ch
+   ```
+   *(or use the standalone pkg installer from the blackhole website).*
+2. open the **audio midi setup** app on your mac (found in applications/utilities).
+3. click the `+` button in the bottom left corner and select **create multi-output device**.
+4. check the boxes for both your **headphones** (e.g. bluetooth/built-in output) and **blackhole 2ch**. **uncheck** your macbook speakers (or built-in output) so sound is only routed to your headphones and the visualizer.
+5. check the **drift correction** checkbox next to **blackhole 2ch**.
+6. set your macOS sound output to the newly created **multi-output device** via your menu bar speaker/volume menu.
+7. open **tinyparty**, click the tray icon, open the **`input`** submenu, and select **`blackhole 2ch (virtual)`**.
 
 ## changelog
+
+### [0.3.0] - 2026-06-27
+*   **audio input selector**: added a dynamic `input` tray submenu to choose between different hardware microphones and system audio loopback drivers (like BlackHole).
+*   **headphones support**: enabled visualization of system-level sound (e.g. Spotify, YouTube) through headphones when routed via a macOS Multi-Output device.
+*   **fallback resilience**: self-healing audio initialization that catches offline or unplugged devices and falls back to the default microphone stream without crashing.
+*   **macos permissions**: added `NSAudioCaptureUsageDescription` keys for compliance with macOS Ventura and Sonoma loopback requirements.
 
 ### [0.2.0] - 2026-06-20
 *   **style updates**: added a static, high-reactivity 2-layer 2d `mesh` visualizer.

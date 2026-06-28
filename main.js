@@ -17,6 +17,8 @@ let tray = null;
 let currentStyle = 'spectrum';
 let currentPalette = 'neon';
 let hasUpdateAvailable = false;
+let audioDevices = [];
+let currentAudioDeviceId = 'default';
 
 
 const isDev = process.argv.includes('--dev') || !app.isPackaged;
@@ -101,6 +103,26 @@ function updateTrayMenu() {
           click: () => { setPalette('inferno'); }
         }
       ]
+    },
+    {
+      label: 'input',
+      submenu: audioDevices.length === 0
+        ? [{ label: 'no input devices', enabled: false }]
+        : audioDevices.map(device => ({
+            label: device.label.toLowerCase(),
+            type: 'radio',
+            checked: currentAudioDeviceId === device.id || (currentAudioDeviceId === 'default' && (device.id === 'default' || device.id === '')),
+            click: () => {
+              currentAudioDeviceId = device.id;
+              if (mainWindow) {
+                mainWindow.webContents.send('change-audio-device', device.id);
+              }
+              if (onboardingWindow) {
+                onboardingWindow.webContents.send('change-audio-device', device.id);
+              }
+              updateTrayMenu();
+            }
+          }))
     },
     { type: 'separator' },
     { label: 'quit', click: () => { app.quit(); } }
@@ -352,6 +374,16 @@ ipcMain.on('onboarding-complete', () => {
 // Clean quit request from the UI/Esc key
 ipcMain.on('quit-app', () => {
   app.quit();
+});
+
+// IPC Listener to receive audio input devices list from the renderer
+ipcMain.on('send-audio-devices', (event, devices, activeId) => {
+  console.log(`[Main Process] Received send-audio-devices. Count: ${devices.length}, ActiveId: ${activeId}`);
+  audioDevices = devices;
+  if (activeId) {
+    currentAudioDeviceId = activeId;
+  }
+  updateTrayMenu();
 });
 
 // Sync visualizer state once renderer is fully loaded and ready to process messages
